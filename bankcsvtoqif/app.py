@@ -20,9 +20,10 @@
 
 
 import argparse
+import importlib
 import inspect
 import pkgutil
-import importlib
+
 from bankcsvtoqif import banks
 
 # create dict of all bank account types
@@ -47,3 +48,5 @@ parser.add_argument('-t', '--target_account', nargs='?', const='Imbalance-EUR', 
 parser.add_argument('-r', '--replacements', nargs='?', const='replacements.ini',
                     help="config file for automatic replacements")
 parser.add_argument('-v', action='store_true', help="produce output during conversion")
+parser.add_argument('-F', '--from_date', default='0001-01-01', help="start date, inclusive, to include from input")
+parser.add_argument('-T', '--to_date', default='2999-12-31', help="end date, inclusive, to include from input")
