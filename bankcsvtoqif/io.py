@@ -17,12 +17,12 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+from datetime import datetime
 
-
+from bankcsvtoqif.app import bank_dict
 from bankcsvtoqif.qif import QifFile
 from bankcsvtoqif.smartlabeler import SmartLabeler
 from bankcsvtoqif.transaction import TransactionFactory
-from bankcsvtoqif.app import bank_dict
 
 
 class Messenger(object):
@@ -53,11 +53,14 @@ class DataManager(object):
         self.qif_filename = args.qif_file if args.qif_file else args.csv_file[:-3] + 'qif'
         self.replacements_file = args.replacements
         self.messenger = Messenger(args.v)
+        self.inclusion_config = {}
+        self.inclusion_config['from_date'] = datetime.strptime(args.from_date, '%Y-%m-%d')
+        self.inclusion_config['to_date'] = datetime.strptime(args.to_date, '%Y-%m-%d')
         self.transactions = []
 
     def read_csv(self, f):
         self.messenger.send_message("Parsing csv-file from" + self.csv_filename + "...", preblanks=1)
-        transaction_factory = TransactionFactory(self.account_config)
+        transaction_factory = TransactionFactory(self.account_config, self.inclusion_config)
         self.transactions = transaction_factory.read_from_file(f, self.messenger)
 
     def relabel_transactions(self, f):

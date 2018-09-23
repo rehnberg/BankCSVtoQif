@@ -69,8 +69,9 @@ class Transaction(object):
 class TransactionFactory(object):
     """ Creates Transactions from an account_config. """
 
-    def __init__(self, account_config):
+    def __init__(self, account_config, inclusion_config):
         self.account_config = account_config
+        self.inclusion_config = inclusion_config
 
     def create_from_line(self, line):
         return Transaction(
@@ -93,9 +94,16 @@ class TransactionFactory(object):
         for line in c:
             try:
                 transaction = self.create_from_line(line)
-                transactions.append(transaction)
-                messenger.send_message("parsed: " + transaction.__str__())
+                if (self.transaction_in_date_range(transaction)):
+                    transactions.append(transaction)
+                    messenger.send_message("parsed: " + transaction.__str__())
+                else:
+                    messenger.send_message("outside date range: " + transaction.__str__())
             except IndexError:
                 messenger.send_message('skipped: %s' % line)
                 continue
         return transactions
+
+    def transaction_in_date_range(self, transaction):
+        d = transaction.date
+        return self.inclusion_config['from_date'] <= d and d <= self.inclusion_config['to_date']
