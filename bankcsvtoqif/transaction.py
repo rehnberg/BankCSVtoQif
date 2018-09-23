@@ -20,6 +20,7 @@
 
 import collections
 import csv
+import enum
 from itertools import islice
 
 
@@ -30,6 +31,14 @@ def consume(iterator, n):
     else:
         next(islice(iterator, n, n), None)
 
+class TransactionType(enum.Enum):
+    SimpleTransaction = enum.auto()
+    InvestmentTransaction = enum.auto()
+
+
+class InvestmentAction(enum.Enum):
+    Buy = 'Buy'
+    Sell = 'Sell'
 
 class Transaction(object):
     """ Represents a transaction obtained from csv-file. """
@@ -57,7 +66,7 @@ class Transaction(object):
 
     def to_qif_line(self):
         return [
-            '!Type:Cash',
+            '!Type:Bank',
             'D' + self.date.strftime('%m/%d/%y'),
             'S' + self.target_account,
             'P' + self.description,
@@ -66,6 +75,44 @@ class Transaction(object):
         ]
 
 
+class InvestmentTransaction():
+    """ Represents an investment transaction """
+
+    def __init__(self, date, description, investment_amount, security, price, action, quantity, target_account, source_account='Assets:Current Assets:Checking Account'):
+        self.date = date
+        self.description = description
+        self.investment_amount = investment_amount
+        self.security = security
+        self.action = action
+        self.price = price
+        self.quantity = quantity
+        self.target_account = target_account
+        self.source_account = source_account
+
+    def __str__(self):
+        return '<InvestmentTransaction %s, %s, %s, %s, %s, %s, %s>'% (
+            self.date,
+            self.action.name,
+            self.description,
+            self.security,
+            self.investment_amount,
+            self.price,
+            self.quantity
+        )
+
+    def to_qif_line(self):
+        return [
+            '!Type:Invst',
+            'D' + self.date.strftime('%m/%d/%y'),
+            'N' + self.action.value,
+            'Y' + self.security,
+            'I' + '%.2f' % self.price,
+            'Q' + '%.5f' % self.quantity,
+            'T' + '%.2f' % self.investment_amount,
+            'M' + self.description,
+            '^'
+        ]
+
 class TransactionFactory(object):
     """ Creates Transactions from an account_config. """
 
@@ -73,7 +120,7 @@ class TransactionFactory(object):
         self.account_config = account_config
         self.inclusion_config = inclusion_config
 
-    def create_from_line(self, line):
+    def createSimpleTransaction(self, line):
         return Transaction(
             date=self.account_config.get_date(line),
             description=self.account_config.get_description(line),
@@ -82,6 +129,28 @@ class TransactionFactory(object):
             target_account=self.account_config.get_target_account(line),
             source_account=self.account_config.get_source_account(line)
         )
+
+    def createInvestmentTransaction(self, line):
+        return InvestmentTransaction(
+            date=self.account_config.get_date(line),
+            description=self.account_config.get_description(line),
+            investment_amount=self.account_config.get_investment_amount(line),
+            security=self.account_config.get_security(line),
+            action=self.account_config.get_action(line),
+            price=self.account_config.get_price(line),
+            quantity=self.account_config.get_quantity(line),
+            target_account=self.account_config.get_target_account(line),
+            source_account=self.account_config.get_source_account(line)
+        )
+
+    def create_from_line(self, line):
+        switcher = {
+            TransactionType.SimpleTransaction: self.createSimpleTransaction,
+            TransactionType.InvestmentTransaction: self.createInvestmentTransaction
+        }
+        type = self.account_config.get_transaction_type(line)
+        createFunction = switcher.get(type)
+        return createFunction(line)
 
     def read_from_file(self, f, messenger):
         csv.register_dialect(

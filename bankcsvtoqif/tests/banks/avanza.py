@@ -30,6 +30,8 @@ class TestAvanza(unittest.TestCase):
     def setUp(self):
         self.csv_debit = """2018-01-29;6678344;Köp;This is a debit;0,3027;330,33;-99,99;-;SEK;SE0656516146"""
         self.csv_credit = """2018-01-29;6678344;Insättning;This is a credit;-;-;1000,00;-;SEK;-"""
+        self.csv_sell = """2018-06-05;6678344;Sälj;This is a sell;-28,7301;208,05;5977,19;-;SEK;SE034534534"""
+        self.csv_buy = """2018-06-04;6678344;Köp;This is a buy;4,6074;217,04;-999,99;-;SEK;SE00345345345"""
 
     def test_can_instantiate(self):
         account_config = Avanza()
@@ -58,3 +60,31 @@ class TestAvanza(unittest.TestCase):
         self.assertEqual(account_config.get_description(line), description)
         self.assertEqual(account_config.get_debit(line), debit)
         self.assertEqual(account_config.get_credit(line), credit)
+
+    def test_sell(self):
+        account_config = Avanza()
+        line = csvline_to_line(self.csv_sell, account_config)
+        date = datetime(2018, 6, 5)
+        description = 'This is a sell'
+        price = 208.05
+        quantity = 28.7301
+        amount = 5977.19
+        self.assertEqual(account_config.get_date(line), date)
+        self.assertEqual(account_config.get_description(line), description)
+        self.assertEqual(account_config.get_price(line), price)
+        self.assertEqual(account_config.get_quantity(line), quantity)
+        self.assertEqual(account_config.get_investment_amount(line), amount)
+
+    def test_buy(self):
+        account_config = Avanza()
+        line = csvline_to_line(self.csv_buy, account_config)
+        date = datetime(2018, 6, 4)
+        description = 'This is a buy'
+        price = 217.04
+        quantity = 4.6074
+        amount = 999.99
+        self.assertEqual(account_config.get_date(line), date)
+        self.assertEqual(account_config.get_description(line), description)
+        self.assertEqual(account_config.get_price(line), price)
+        self.assertEqual(account_config.get_quantity(line), quantity)
+        self.assertEqual(account_config.get_investment_amount(line), amount)

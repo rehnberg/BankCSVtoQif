@@ -18,8 +18,10 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from abc import ABCMeta, abstractmethod
 import csv
+from abc import ABCMeta, abstractmethod
+
+from bankcsvtoqif.transaction import TransactionType
 
 
 class BankAccountConfig(object):
@@ -111,3 +113,61 @@ class BankAccountConfig(object):
 
         """
         return self.default_source_account
+
+    def get_transaction_type(self, line):
+        """
+        :param line: #of csv
+        :return: type of transaction
+        """
+        return TransactionType.SimpleTransaction
+
+
+class InvestmentConfig:
+    """ Abstract class. Mixin to be used if the bank supports investment transactions.
+        For each bank account type, a subclass is implemented. @abstractmethods have to
+        be overriden and implemented in the subclass.
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def get_security(self, line):
+        """
+        :param line: # of csv
+        :return: name of security as a string
+        """
+        pass
+
+    @abstractmethod
+    def get_action(self, line):
+        """
+        :param line: # of csv
+        :return: the investment action for the action as specified by InvestmentAction
+        """
+        pass
+
+    @abstractmethod
+    def get_price(self, line):
+        """
+        :param line: # of csv
+        :return: The price for the security
+        """
+        pass
+
+    @abstractmethod
+    def get_quantity(self, line):
+        """
+        :param line: # of csv
+        :return: The quantity for the investment
+        """
+        pass
+
+    @abstractmethod
+    def get_investment_amount(self, line):
+        """
+        :param line: # of csv
+        :return: The total amount for the investment
+        """

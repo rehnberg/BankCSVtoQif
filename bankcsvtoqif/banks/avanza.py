@@ -20,10 +20,11 @@
 
 from datetime import datetime
 
-from bankcsvtoqif.banks import BankAccountConfig
+from bankcsvtoqif.banks import BankAccountConfig, InvestmentConfig
+from bankcsvtoqif.transaction import TransactionType, InvestmentAction
 
 
-class Avanza(BankAccountConfig):
+class Avanza(BankAccountConfig, InvestmentConfig):
     """ Avanza Bank """
 
     def __init__(self):
@@ -50,3 +51,31 @@ class Avanza(BankAccountConfig):
     def get_credit(self, line):
         amount = self.get_amount(line[6])
         return amount if amount >= 0 else 0
+
+    def get_transaction_type(self, line):
+        switcher = {
+            'Insättning': TransactionType.SimpleTransaction,
+            'Sälj': TransactionType.InvestmentTransaction,
+            'Köp': TransactionType.InvestmentTransaction
+        }
+        return switcher.get(line[2], TransactionType.SimpleTransaction)
+
+    def get_security(self, line):
+        return line[3]
+
+    def get_action(self, line):
+        switcher = {
+            'Sälj': InvestmentAction.Sell,
+            'Köp': InvestmentAction.Buy
+        }
+        return switcher.get(line[2])
+
+    def get_price(self, line):
+        return self.get_amount(line[5])
+
+    def get_quantity(self, line):
+        return self.get_absolute_amount(line[4])
+
+    def get_investment_amount(self, line):
+        return self.get_absolute_amount(line[6])
+
