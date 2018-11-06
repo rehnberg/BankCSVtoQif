@@ -35,7 +35,6 @@ class Avanza(BankAccountConfig, InvestmentConfig):
         self.dropped_lines = 1
         self.default_source_account = 'Assets:Current Assets:Checking Account'
         self.default_target_account = 'Imbalance-SEK'
-        self.encoding = 'ISO-8859-1'
 
     def get_date(self, line):
         s = line[0].split('-')
