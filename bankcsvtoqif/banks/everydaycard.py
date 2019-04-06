@@ -34,7 +34,7 @@ class Everydaycard(BankAccountConfig):
         self.dropped_lines = 6
         self.default_source_account = 'Assets:Current Assets:Checking Account'
         self.default_target_account = 'Imbalance-SEK'
-        self.encoding = 'utf-8-sig'
+        self.encoding = 'Latin-1'
 
     def get_date(self, line):
         s = line[0].split('-')
